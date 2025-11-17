@@ -21,7 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
+import java.util.List;
+import java.util.Comparator;
+import org.springframework.web.context.annotation.SessionScope;
 
+@SessionScope
 @Service("fastItemService")
 public class ItemServiceImpl implements ItemService {
 
@@ -119,4 +123,17 @@ public class ItemServiceImpl implements ItemService {
 
         return item;
     }
+
+    @Override
+    public List<Item> getLowStockItems() {
+        return itemDao.findAll().stream() 
+            .filter(item -> item.getQuantity() < 5)   // lambda
+            .sorted(Comparator.comparingInt(Item::getQuantity))
+            .toList();
+}
+    @Override
+    public List<Item> findAll() {
+        return itemDao.findAll();
+    }
+
 }

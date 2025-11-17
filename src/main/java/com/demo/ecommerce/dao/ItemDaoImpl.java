@@ -6,6 +6,7 @@ import org.jooq.Record;
 import org.springframework.stereotype.Repository;
 
 import static org.jooq.impl.DSL.*;
+import java.util.List;
 
 @Repository
 public class ItemDaoImpl implements ItemDao {
@@ -57,5 +58,12 @@ public class ItemDaoImpl implements ItemDao {
                 .where(field("item_id").eq(item.getItemId()))
                 .execute();
         return item;
+    }
+
+    @Override
+    public List<Item> findAll() {
+        return dsl.select()
+                .from(TABLE)
+                .fetchInto(Item.class);
     }
 }

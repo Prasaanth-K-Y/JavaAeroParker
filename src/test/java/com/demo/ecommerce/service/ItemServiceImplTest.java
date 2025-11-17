@@ -4,6 +4,7 @@ import com.demo.ecommerce.dto.PlaceOrderRequest;
 import com.demo.ecommerce.exception.InsufficientStockException;
 import com.demo.ecommerce.exception.ItemNotFoundException;
 import com.demo.ecommerce.model.Item;
+import com.demo.ecommerce.model.ItemFactory;
 import com.demo.ecommerce.repository.ItemRepository;
 
 // gRPC
@@ -60,7 +61,7 @@ public class ItemServiceImplTest {
     public void testPlaceOrder_Success() {
 
         // ARRANGE
-        Item item =new Item("ITM200", "Laptop", 5, 55000.0);
+       Item item = ItemFactory.create("A1", "Laptop", 10, 1200);
         item.setPrice(90000.0);
 
         PlaceOrderRequest request = new PlaceOrderRequest("I101", 3);

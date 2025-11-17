@@ -2,7 +2,12 @@ package com.demo.ecommerce.service;
 
 
 import com.demo.ecommerce.dto.PlaceOrderRequest;
+import com.demo.ecommerce.exception.InsufficientStockException;
+import com.demo.ecommerce.exception.ItemAlreadyExistsException;
+import com.demo.ecommerce.exception.ItemNotFoundException;
 import com.demo.ecommerce.model.Item;
+
+import java.util.List;
 
 public interface ItemService {
 
@@ -31,4 +36,19 @@ public interface ItemService {
      * @throws ItemNotFoundException if the item doesn't exist.
      */
     Item getItemById(String itemId);
+
+    /**
+     * Finds an item by its ID.
+     * @param itemId The ID of the item to find.
+     * @return The found item.
+     * @throws ItemNotFoundException if the item doesn't exist.
+     */
+    List<Item> getLowStockItems();
+
+    /**
+     * Finds all items.
+     * @return A list of all items.
+     */
+    List<Item> findAll();
 }
+

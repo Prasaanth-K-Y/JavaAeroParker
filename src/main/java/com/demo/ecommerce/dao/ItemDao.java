@@ -7,4 +7,7 @@ public interface ItemDao {
     boolean exists(String id);
     Item save(Item item);
     Item update(Item item);
+
+    java.util.List<Item> findAll();
+
 }
