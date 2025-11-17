@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-@ControllerAdvice // This annotation makes it a global handler for all controllers
+@ControllerAdvice 
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ItemNotFoundException.class)

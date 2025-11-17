@@ -20,11 +20,11 @@ public class Item {
     private int quantity;
 
     @Column(name = "price")
-    private double price;   // ← NEW FIELD
+    private double price; 
 
     public Item() {}
 
-    // NEW 4-arg constructor
+    //constructor
     public Item(String itemId, String itemName, int quantity, double price) {
         this.itemId = itemId;
         this.itemName = itemName;

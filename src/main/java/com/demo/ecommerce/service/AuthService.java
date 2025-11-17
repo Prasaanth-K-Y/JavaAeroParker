@@ -36,7 +36,7 @@ public class AuthService {
         user.setUsername(request.username());
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setAddress(request.address());
-        user.setRole(request.role()); // Assumes request DTO has Role
+        user.setRole(request.role()); 
 
         userRepository.save(user);
 
@@ -55,7 +55,7 @@ public class AuthService {
         );
         // If execution reaches here, user is authenticated
         var user = userRepository.findByUsername(request.username())
-                .orElseThrow(); // We know user exists
+                .orElseThrow(); 
 
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);

@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api") // All endpoints will be prefixed with /api
+@RequestMapping("/api")//CDI 
 public class ECommerceController {
 
     private final ItemService itemService;
