@@ -1,4 +1,4 @@
-# JavaAeroParker Project**
+# JavaAeroParker Project
 
 A Production-ready Java Spring Boot + JOOQ + DAO + gRPC Learning Project
 
