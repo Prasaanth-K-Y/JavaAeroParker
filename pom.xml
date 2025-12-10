@@ -62,6 +62,10 @@
             <version>5.11.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
 
         <!-- gRPC Test Support (optional but helpful for mocks) -->
         <dependency>
@@ -180,7 +184,6 @@
         </extension>
     </extensions>
     <plugins>
-        
         <!-- Protobuf Code Generation Plugin -->
         <plugin>
             <groupId>org.xolstice.maven.plugins</groupId>
@@ -196,7 +199,7 @@
             </configuration>
             <executions>
                 <execution>
-                    <goals>
+                    <goals> 
                         <goal>compile</goal>
                         <goal>compile-custom</goal>
                     </goals>

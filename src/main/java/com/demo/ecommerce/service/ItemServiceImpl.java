@@ -86,7 +86,7 @@ public class ItemServiceImpl implements ItemService {
         }
 
         throw new InsufficientStockException(
-                "Insufficient stock. Requested = " + orderRequest.quantity() +
+                "GRPC SENT.Insufficient stock. Requested = " + orderRequest.quantity() +
                         ", Available = " + item.getQuantity()
         );
     }
