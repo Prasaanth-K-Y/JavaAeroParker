@@ -1,6 +1,6 @@
 package com.demo.ecommerce.service;
 
-import com.demo.ecommerce.model.User;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

@@ -5,7 +5,6 @@ import com.demo.ecommerce.dto.AuthResponse;
 import com.demo.ecommerce.dto.LoginRequest;
 import com.demo.ecommerce.dto.RefreshTokenRequest;
 import com.demo.ecommerce.dto.RegisterRequest;
-import com.demo.ecommerce.model.Role;
 import com.demo.ecommerce.model.User;
 import com.demo.ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;

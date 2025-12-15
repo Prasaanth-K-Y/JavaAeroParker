@@ -5,7 +5,6 @@ import com.demo.ecommerce.dto.PlaceOrderRequest;
 import com.demo.ecommerce.dto.SimpleApiResponse;
 import com.demo.ecommerce.model.Item;
 import com.demo.ecommerce.service.ItemService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -26,7 +25,6 @@ public class ECommerceController {
 
     private final ItemService itemService;
 
-    @Autowired
     public ECommerceController(ItemService itemService) {
         this.itemService = itemService;
     }
