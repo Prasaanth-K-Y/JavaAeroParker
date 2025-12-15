@@ -1,37 +1,34 @@
 package com.demo.ecommerce.service;
 
+import com.demo.ecommerce.dao.ItemDao;
 import com.demo.ecommerce.dto.PlaceOrderRequest;
 import com.demo.ecommerce.exception.InsufficientStockException;
 import com.demo.ecommerce.exception.ItemNotFoundException;
 import com.demo.ecommerce.model.Item;
-import com.demo.ecommerce.model.ItemFactory;
-import com.demo.ecommerce.repository.ItemRepository;
 
-// gRPC
 import com.demo.grpc.notification.NotificationRequest;
 import com.demo.grpc.notification.NotificationServiceGrpc.NotificationServiceBlockingStub;
 
-import org.junit.*;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.mockito.*;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ItemServiceImplTest {
 
     @Mock
-    private ItemRepository itemRepository;
+    private ItemDao itemDao;
 
     @Mock
     private NotificationServiceBlockingStub notificationStub;
@@ -48,9 +45,8 @@ public class ItemServiceImplTest {
     @InjectMocks
     private ItemServiceImpl itemService;
 
-    @Before
+    @BeforeEach
     public void setup() {
-        MockitoAnnotations.openMocks(this);
         org.springframework.security.core.context.SecurityContextHolder.setContext(securityContext);
     }
 
@@ -59,15 +55,14 @@ public class ItemServiceImplTest {
     // ---------------------------------------------------------------------
     @Test
     public void testPlaceOrder_Success() {
-
         // ARRANGE
-       Item item = ItemFactory.create("A1", "Laptop", 10, 1200);
-        item.setPrice(90000.0);
+        Item item = new Item("Laptop", 10, 1200.0);
+        item.setItemId(101L);
 
-        PlaceOrderRequest request = new PlaceOrderRequest("I101", 3);
+        PlaceOrderRequest request = new PlaceOrderRequest(101L, 3);
 
-        when(itemRepository.findById("I101")).thenReturn(Optional.of(item));
-        when(itemRepository.save(any(Item.class)))
+        when(itemDao.findById(101L)).thenReturn(item);
+        when(itemDao.update(any(Item.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // ACT
@@ -81,42 +76,62 @@ public class ItemServiceImplTest {
     // ---------------------------------------------------------------------
     // TEST 2: Item not found
     // ---------------------------------------------------------------------
-    @Test(expected = ItemNotFoundException.class)
+    @Test
     public void testPlaceOrder_ItemNotFound() {
+        PlaceOrderRequest request = new PlaceOrderRequest(999L, 2);
 
-        PlaceOrderRequest request = new PlaceOrderRequest("BAD_ID", 2);
+        when(itemDao.findById(999L)).thenReturn(null);
 
-        when(itemRepository.findById("BAD_ID")).thenReturn(Optional.empty());
-
-        itemService.placeOrder(request);
+        assertThrows(ItemNotFoundException.class, () -> {
+            itemService.placeOrder(request);
+        });
     }
 
     // ---------------------------------------------------------------------
     // TEST 3: Insufficient stock + gRPC notification
     // ---------------------------------------------------------------------
-    @Test(expected = InsufficientStockException.class)
+    @Test
     public void testPlaceOrder_InsufficientStock() {
-
         // ARRANGE
-        Item item = new Item("ITM200", "Laptop", 5, 55000.0)
-;
-        item.setPrice(55000.0);
+        Item item = new Item("Laptop", 5, 55000.0);
+        item.setItemId(200L);
 
-        PlaceOrderRequest request = new PlaceOrderRequest("ITM200", 10);
+        PlaceOrderRequest request = new PlaceOrderRequest(200L, 10);
 
-        when(itemRepository.findById("ITM200")).thenReturn(Optional.of(item));
+        when(itemDao.findById(200L)).thenReturn(item);
 
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(userDetails);
         when(userDetails.getUsername()).thenReturn("testUser");
 
-        // ACT
-        try {
+        // ACT & ASSERT
+        assertThrows(InsufficientStockException.class, () -> {
             itemService.placeOrder(request);
-        } finally {
-            // ASSERT
-            verify(notificationStub, times(1))
-                    .notifyInsufficientStock(any(NotificationRequest.class));
-        }
+        });
+
+        // ASSERT that gRPC notification was sent
+        verify(notificationStub, times(1))
+                .notifyInsufficientStock(any(NotificationRequest.class));
+    }
+
+    // ---------------------------------------------------------------------
+    // TEST 4: Add new item
+    // ---------------------------------------------------------------------
+    @Test
+    public void testAddNewItem_Success() {
+        Item newItem = new Item("Mouse", 15, 500.0);
+
+        when(itemDao.save(any(Item.class)))
+                .thenAnswer(invocation -> {
+                    Item saved = invocation.getArgument(0);
+                    saved.setItemId(123L); // simulate generated ID
+                    return saved;
+                });
+
+        Item saved = itemService.addNewItem(newItem);
+
+        assertNotNull(saved.getItemId());
+        assertEquals("Mouse", saved.getItemName());
+        assertEquals(15, saved.getQuantity());
     }
 }

@@ -1,6 +1,8 @@
 package com.demo.ecommerce.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,12 +18,17 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Name cannot be blank")
+    @Pattern(regexp = "^[a-zA-Z\\s]+$", message = "Name must contain only alphabets and spaces")
     @Column(nullable = false)
     private String name;
 
+    @NotBlank(message = "Username cannot be blank")
+    @Pattern(regexp = "^[a-zA-Z0-9]+$", message = "Username must contain only alphabets and numbers")
     @Column(nullable = false, unique = true)
     private String username; // Used for login
 
+    @NotBlank(message = "Password cannot be blank")
     @Column(nullable = false)
     private String password; // Will be stored encrypted
 

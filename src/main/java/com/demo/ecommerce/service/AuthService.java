@@ -1,5 +1,6 @@
 package com.demo.ecommerce.service;
 
+import com.demo.ecommerce.dto.AccessTokenResponse;
 import com.demo.ecommerce.dto.AuthResponse;
 import com.demo.ecommerce.dto.LoginRequest;
 import com.demo.ecommerce.dto.RefreshTokenRequest;
@@ -63,16 +64,14 @@ public class AuthService {
         return new AuthResponse(accessToken, refreshToken);
     }
 
-    public AuthResponse refreshToken(RefreshTokenRequest request) {
+    public AccessTokenResponse refreshToken(RefreshTokenRequest request) {
         String username = jwtService.extractUsername(request.refreshToken());
         UserDetails userDetails = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found in token"));
 
         if (jwtService.isTokenValid(request.refreshToken(), userDetails)) {
             String newAccessToken = jwtService.generateToken(userDetails);
-            // Re-issue a new refresh token (optional, but good for security)
-            String newRefreshToken = jwtService.generateRefreshToken(userDetails);
-            return new AuthResponse(newAccessToken, newRefreshToken);
+            return new AccessTokenResponse(newAccessToken);
         } else {
             throw new IllegalArgumentException("Invalid Refresh Token");
         }

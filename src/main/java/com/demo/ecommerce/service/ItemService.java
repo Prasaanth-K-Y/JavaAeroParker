@@ -35,7 +35,7 @@ public interface ItemService {
      * @return The found item.
      * @throws ItemNotFoundException if the item doesn't exist.
      */
-    Item getItemById(String itemId);
+    Item getItemById(Long itemId);
 
     /**
      * Finds an item by its ID.
