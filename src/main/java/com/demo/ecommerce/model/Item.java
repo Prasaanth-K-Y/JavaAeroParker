@@ -1,6 +1,7 @@
 package com.demo.ecommerce.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
@@ -20,17 +21,19 @@ public class Item {
     private String itemName;
 
     @Positive(message = "Quantity must be greater than 0")
+    @Digits(integer = 10, fraction = 0, message = "Quantity must be a whole number without decimals")
     @Column(name = "quantity")
     private int quantity;
 
     @Positive(message = "Price must be greater than 0")
+    @Digits(integer = 10, fraction = 0, message = "Price must be a whole number without decimals")
     @Column(name = "price")
-    private double price;
+    private int price;
 
     public Item() {}
 
     // Constructor without ID (ID is auto-generated)
-    public Item(String itemName, int quantity, double price) {
+    public Item(String itemName, int quantity, int price) {
         this.itemName = itemName;
         this.quantity = quantity;
         this.price = price;
@@ -46,6 +49,6 @@ public class Item {
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
 
-    public double getPrice() { return price; }
-    public void setPrice(double price) { this.price = price; }
+    public int getPrice() { return price; }
+    public void setPrice(int price) { this.price = price; }
 }

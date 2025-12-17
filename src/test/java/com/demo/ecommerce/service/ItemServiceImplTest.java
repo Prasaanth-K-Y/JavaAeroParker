@@ -56,7 +56,7 @@ public class ItemServiceImplTest {
     @Test
     public void testPlaceOrder_Success() {
         // ARRANGE
-        Item item = new Item("Laptop", 10, 1200.0);
+        Item item = new Item("Laptop", 10, 1200);
         item.setItemId(101L);
 
         PlaceOrderRequest request = new PlaceOrderRequest(101L, 3);
@@ -93,7 +93,7 @@ public class ItemServiceImplTest {
     @Test
     public void testPlaceOrder_InsufficientStock() {
         // ARRANGE
-        Item item = new Item("Laptop", 5, 55000.0);
+        Item item = new Item("Laptop", 5, 55000);
         item.setItemId(200L);
 
         PlaceOrderRequest request = new PlaceOrderRequest(200L, 10);
@@ -119,7 +119,7 @@ public class ItemServiceImplTest {
     // ---------------------------------------------------------------------
     @Test
     public void testAddNewItem_Success() {
-        Item newItem = new Item("Mouse", 15, 500.0);
+        Item newItem = new Item("Mouse", 15, 500);
 
         when(itemDao.save(any(Item.class)))
                 .thenAnswer(invocation -> {
@@ -133,5 +133,24 @@ public class ItemServiceImplTest {
         assertNotNull(saved.getItemId());
         assertEquals("Mouse", saved.getItemName());
         assertEquals(15, saved.getQuantity());
+        assertEquals(500, saved.getPrice());
+    }
+
+    // ---------------------------------------------------------------------
+    // TEST 5: Validate that price and quantity are integers (no decimals)
+    // ---------------------------------------------------------------------
+    @Test
+    public void testItemWithIntegerPriceAndQuantity() {
+        // ARRANGE - Create item with integer values
+        Item item = new Item("Keyboard", 10, 1500);
+        item.setItemId(150L);
+
+        // ASSERT - Verify integer values (no decimals allowed)
+        assertEquals(1500, item.getPrice());
+        assertEquals(10, item.getQuantity());
+
+        // ASSERT - Values are whole numbers
+        assertTrue(item.getPrice() == Math.floor(item.getPrice()));
+        assertTrue(item.getQuantity() == Math.floor(item.getQuantity()));
     }
 }
