@@ -1,16 +1,21 @@
 package com.demo.ecommerce.service;
 
 
+import com.demo.ecommerce.model.TokenBlacklist;
+import com.demo.ecommerce.repository.TokenBlacklistRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +35,12 @@ public class JwtService {
 
     @Value("${app.jwt.refresh-expiration-ms}")
     private long REFRESH_TOKEN_EXPIRATION;
+
+    private final TokenBlacklistRepository tokenBlacklistRepository;
+
+    public JwtService(@Lazy TokenBlacklistRepository tokenBlacklistRepository) {
+        this.tokenBlacklistRepository = tokenBlacklistRepository;
+    }
 
 
     public String extractUsername(String token) {
@@ -88,5 +99,27 @@ public class JwtService {
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(JWT_SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public boolean isTokenBlacklisted(String token) {
+        return tokenBlacklistRepository.existsByToken(token);
+    }
+
+    public void blacklistToken(String token) {
+        Date expiration = extractExpiration(token);
+        LocalDateTime expiresAt = expiration.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+
+        TokenBlacklist blacklistedToken = new TokenBlacklist(
+                token,
+                LocalDateTime.now(),
+                expiresAt
+        );
+        tokenBlacklistRepository.save(blacklistedToken);
+    }
+
+    public Date getTokenExpiration(String token) {
+        return extractExpiration(token);
     }
 }

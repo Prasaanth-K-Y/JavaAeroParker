@@ -33,6 +33,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
+        // Skip JWT filter for public endpoints
+        String path = request.getRequestURI();
+        if (path.startsWith("/api/auth/") || path.equals("/items/view") || path.equals("/favicon.ico")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String username;
@@ -49,6 +56,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             // Handle expired or invalid token
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid or Expired Token");
+            return;
+        }
+
+        // Check if token is blacklisted
+        if (jwtService.isTokenBlacklisted(jwt)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token has been invalidated");
             return;
         }
 

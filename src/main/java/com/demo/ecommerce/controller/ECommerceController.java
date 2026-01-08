@@ -1,7 +1,6 @@
 package com.demo.ecommerce.controller;
 
 
-import com.demo.ecommerce.dto.AddItemRequest;
 import com.demo.ecommerce.dto.PlaceOrderRequest;
 import com.demo.ecommerce.dto.SimpleApiResponse;
 import com.demo.ecommerce.model.Item;
@@ -18,6 +17,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -36,23 +36,34 @@ public class ECommerceController {
      * Body: { "itemName": "Laptop", "quantity": 10, "price": 1200.0 }
      */
     @PostMapping("/items")
-    public ResponseEntity<Item> addNewItem(@Valid @RequestBody Item newItem) {
-        Item savedItem = itemService.addNewItem(newItem);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedItem);
+public ResponseEntity<Item> addNewItem(@Valid @RequestBody Item newItem) {
+
+    //  Reject decimal quantity
+    if (newItem.getQuantity() % 1 != 0) {
+        return ResponseEntity
+                .badRequest()
+                .body(null);
     }
 
-    /**
-     * ENDPOINT 2: Place an order for an item.
-     * POST http://localhost:8080/api/orders
-     * Body: { "itemId": 123, "quantity": 2 }
-     */
-    @PostMapping("/orders")
-    public ResponseEntity<SimpleApiResponse> placeOrder(@Valid @RequestBody PlaceOrderRequest orderRequest) {
-        // The service handles all logic and throws exceptions if something goes wrong
-        Item updatedItem = itemService.placeOrder(orderRequest);
+    // Reject decimal price
+    if (newItem.getPrice() % 1 != 0) {
+        return ResponseEntity
+                .badRequest()
+                .body(null);
+    }
 
-        String message = "Order placed successfully! New stock for " + updatedItem.getItemName() + " is " + updatedItem.getQuantity();
-        return ResponseEntity.ok(new SimpleApiResponse(message));
+    Item savedItem = itemService.addNewItem(newItem);
+    return ResponseEntity.status(HttpStatus.CREATED).body(savedItem);
+}
+
+    /**
+     * ENDPOINT 2: Get all items from the inventory.
+     * GET http://localhost:8080/api/items
+     */
+    @GetMapping("/items")
+    public ResponseEntity<List<Item>> getAllItems() {
+        List<Item> items = itemService.findAll();
+        return ResponseEntity.ok(items);
     }
 
     /**
@@ -66,8 +77,23 @@ public class ECommerceController {
         Item item = itemService.getItemById(itemId);
         return ResponseEntity.ok(item);
     }
+
     /**
-     * ENDPOINT 4: Get the headphone image (Streamed via Servlet).
+     * ENDPOINT 4: Place an order for an item.
+     * POST http://localhost:8080/api/orders
+     * Body: { "itemId": 123, "quantity": 2 }
+     */
+    @PostMapping("/orders")
+    public ResponseEntity<SimpleApiResponse> placeOrder(@Valid @RequestBody PlaceOrderRequest orderRequest) {
+        // The service handles all logic and throws exceptions if something goes wrong
+        Item updatedItem = itemService.placeOrder(orderRequest);
+
+        String message = "Order placed successfully! New stock for " + updatedItem.getItemName() + " is " + updatedItem.getQuantity();
+        return ResponseEntity.ok(new SimpleApiResponse(message));
+    }
+
+    /**
+     * ENDPOINT 5: Get the headphone image (Streamed via Servlet).
      * GET http://localhost:8080/api/items/123/image
      */
     @GetMapping("/items/{itemId}/image")

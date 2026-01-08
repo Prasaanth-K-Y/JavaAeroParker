@@ -64,6 +64,11 @@ public class AuthService {
     }
 
     public AccessTokenResponse refreshToken(RefreshTokenRequest request) {
+        // Check if refresh token is blacklisted
+        if (jwtService.isTokenBlacklisted(request.refreshToken())) {
+            throw new IllegalArgumentException("Refresh token has been invalidated");
+        }
+
         String username = jwtService.extractUsername(request.refreshToken());
         UserDetails userDetails = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found in token"));
@@ -73,6 +78,39 @@ public class AuthService {
             return new AccessTokenResponse(newAccessToken);
         } else {
             throw new IllegalArgumentException("Invalid Refresh Token");
+        }
+    }
+
+    public void logout(String accessToken, String refreshToken) {
+        // Validate and blacklist access token
+        String username = jwtService.extractUsername(accessToken);
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("Invalid access token");
+        }
+
+        // Check if access token is already blacklisted
+        if (jwtService.isTokenBlacklisted(accessToken)) {
+            throw new IllegalArgumentException("Access token already invalidated");
+        }
+
+        // Add access token to blacklist
+        jwtService.blacklistToken(accessToken);
+
+        // Blacklist refresh token if provided
+        if (refreshToken != null && !refreshToken.isEmpty()) {
+            try {
+                // Validate refresh token
+                String refreshUsername = jwtService.extractUsername(refreshToken);
+                if (refreshUsername != null && !refreshUsername.isEmpty()) {
+                    // Check if refresh token is already blacklisted
+                    if (!jwtService.isTokenBlacklisted(refreshToken)) {
+                        jwtService.blacklistToken(refreshToken);
+                    }
+                }
+            } catch (Exception e) {
+                // If refresh token is invalid, just continue (access token is already blacklisted)
+                // This ensures logout succeeds even with invalid refresh token
+            }
         }
     }
 }

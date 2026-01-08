@@ -45,30 +45,33 @@ public class ItemServiceImpl implements ItemService {
             return itemDao.update(item);   // Transaction auto-commits
         }
 
-        sendInsufficientStockNotification(orderRequest, item);
+        boolean grpcSuccess = sendInsufficientStockNotification(orderRequest, item);
+        String grpcStatus = grpcSuccess ? "GRPC SENT" : "GRPC FAILED";
 
         throw new InsufficientStockException(
-                "GRPC SENT. Insufficient stock. Requested = " + orderRequest.quantity() +
+                grpcStatus + ". Insufficient stock. Requested = " + orderRequest.quantity() +
                         ", Available = " + item.getQuantity()
         );
     }
 
-    private void sendInsufficientStockNotification(PlaceOrderRequest req, Item item) {
+    private boolean sendInsufficientStockNotification(PlaceOrderRequest req, Item item) {
         String username = getAuthenticatedUsername();
         String failedOrderId = UUID.randomUUID().toString();
 
-            NotificationRequest grpcReq = NotificationRequest.newBuilder()
-                    .setItemId(String.valueOf(req.itemId()))
-                    .setOrderId(failedOrderId)
-                    .setRequestedQty(req.quantity())
-                    .setUserId(username)
-                    .build();
-
+        NotificationRequest grpcReq = NotificationRequest.newBuilder()
+                .setItemId(String.valueOf(req.itemId()))
+                .setOrderId(failedOrderId)
+                .setRequestedQty(req.quantity())
+                .setUserId(username)
+                .build();
 
         try {
             notificationStub.notifyInsufficientStock(grpcReq);
+            System.out.println("GRPC SUCCESS: Insufficient stock notification sent for item " + item.getItemName());
+            return true;
         } catch (Exception e) {
-            System.err.println("FAILED to send gRPC notification: " + e.getMessage());
+            System.err.println("GRPC FAILED: Unable to send notification - " + e.getMessage());
+            return false;
         }
     }
 
@@ -83,9 +86,9 @@ public class ItemServiceImpl implements ItemService {
 
     // ------------------- ADD ITEM -------------------
 
-   @Override
-@Transactional
-public Item addNewItem(Item newItem) {
+    @Override
+    @Transactional
+    public Item addNewItem(Item newItem) {
 
     if (newItem.getItemId() != null) {
         throw new IllegalArgumentException("New items must NOT provide itemId. It is auto-generated.");
@@ -123,6 +126,36 @@ public Item addNewItem(Item newItem) {
     @Override
     public List<Item> findAll() {
         return itemDao.findAll();
+    }
+
+    // ------------------- ORDER PROCESSING (for JSP page) -------------------
+    @Transactional
+    public Item processOrderWithLowStockCheck(Long itemId, int quantity) {
+        Item item = itemDao.findById(itemId);
+        if (item == null) {
+            throw new ItemNotFoundException("Item not found: " + itemId);
+        }
+
+        // Check if requested quantity exceeds available stock
+        if (quantity > item.getQuantity()) {
+            // Send insufficient stock notification via gRPC and track success/failure
+            boolean grpcSuccess = sendInsufficientStockNotification(
+                new PlaceOrderRequest(itemId, quantity),
+                item
+            );
+
+            String grpcStatus = grpcSuccess ? "GRPC SENT" : "GRPC FAILED";
+            throw new InsufficientStockException(
+                grpcStatus + ". Insufficient stock. Requested = " + quantity +
+                ", Available = " + item.getQuantity()
+            );
+        }
+
+        // Update quantity - no gRPC notification for successful orders
+        item.setQuantity(item.getQuantity() - quantity);
+        Item updatedItem = itemDao.update(item);
+
+        return updatedItem;
     }
 
 }
