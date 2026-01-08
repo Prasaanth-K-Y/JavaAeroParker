@@ -530,7 +530,7 @@
                             : '⚠️ Notification failed';
 
                         // Track detailed failure information
-                        const notificationStatusText = isNotificationSent ? 'notification sent' : (isNotificationFailed ? 'notification failed' : 'no notification');
+                        const notificationStatusText = isNotificationSent ? 'notification sent' :'notification failed';
                         failureDetails.push({
                             name: item.name,
                             notificationStatus: notificationStatusText,
